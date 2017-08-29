@@ -7,7 +7,7 @@ public class ClickableUnit : MonoBehaviour {
     public HexMap map;
     public GameObject parent;
     float t0;
-    Component halo;
+    public Component halo;
     public int x;
     public int y;
     public List<Node> path;
@@ -15,8 +15,7 @@ public class ClickableUnit : MonoBehaviour {
     private void Start()
     {
         t0 = 0f;
-        parent = this.transform.parent.gameObject;
-        halo = parent.transform.GetChild(1).GetComponent("Halo");
+        halo = GetComponent("Halo");
         path = null;
     }
 

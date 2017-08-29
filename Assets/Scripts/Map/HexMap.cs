@@ -63,10 +63,6 @@ public class HexMap : MonoBehaviour {
                 Hex h = new Hex(x, y);
                 hexes[x, y] = h;
                 GameObject go = (GameObject)Instantiate(hexPrefab, h.Position(), Quaternion.identity, this.transform);
-                ClickableHex ct = go.GetComponentInChildren<ClickableHex>();
-                ct.tileX = x;
-                ct.tileY = y;
-                ct.map = this;
                 hexToGameObjectMap[h] = go;
                 if (ShowCordinates)
                 {
@@ -109,19 +105,18 @@ public class HexMap : MonoBehaviour {
             for (int y = 0; y < mapSizeY; y++)
             {
                 Hex h = hexes[x, y];
-                GameObject go = hexToGameObjectMap[h];
-                SpriteRenderer sr = go.GetComponentInChildren<SpriteRenderer>();
-                sr.sprite = hexSprites[tiles[x, y]];
+
+                ClickableHex ct = hexToGameObjectMap[h].GetComponentInChildren<ClickableHex>();
+                ct.tileX = x;
+                ct.tileY = y;
+                ct.map = this;
+
+                ct.changeHex(tiles[x, y]);
 
                 if (units[x, y] != -1)
                 {
-                    GameObject goUnit = (GameObject)Instantiate(unitPrefab, h.Position(), Quaternion.identity, unitMaster.transform);
-                    ClickableUnit cu = goUnit.GetComponentInChildren<ClickableUnit>();
-                    cu.map = this;
-                    cu.x = x;
-                    cu.y = y;
-                    SpriteRenderer srUnit = goUnit.GetComponentInChildren<SpriteRenderer>();
-                    srUnit.sprite = unitsSprites[units[x, y]];
+                    ct.createUnit();
+                    ct.changeUnit(units[x, y]);
                 }
                 if (buildings[x, y] != -1)
                 {
@@ -158,7 +153,10 @@ public class HexMap : MonoBehaviour {
 
     public void MoveUnit(int endx,int endy)
     {
-        SelectedUnit.GetComponentInChildren<ClickableUnit>().path = PathFindHex(endx, endy);
+        if (SelectedUnit != null)
+        {
+            SelectedUnit.GetComponentInChildren<ClickableUnit>().path = PathFindHex(endx, endy);
+        }
     }
 
     public List<Node> PathFindHex(int endx, int endy)

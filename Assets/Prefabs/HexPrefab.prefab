@@ -45,17 +45,17 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!1 &1688315108576096
+--- !u!1 &1412926903855578
 GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   serializedVersion: 5
   m_Component:
-  - component: {fileID: 4361599035309836}
-  - component: {fileID: 212021578262072574}
+  - component: {fileID: 4073925472496906}
+  - component: {fileID: 212647138723222128}
   m_Layer: 0
-  m_Name: Sprite
+  m_Name: SpriteHex
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -83,21 +83,21 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1699964044383344}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -10.907284, y: -1.6192093, z: 0}
+  m_LocalPosition: {x: 59.465736, y: 33.7928, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4422630073944494}
-  - {fileID: 4361599035309836}
+  - {fileID: 4073925472496906}
   - {fileID: 4709443703958026}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &4361599035309836
+--- !u!4 &4073925472496906
 Transform:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1688315108576096}
+  m_GameObject: {fileID: 1412926903855578}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -2}
   m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
@@ -227,13 +227,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileX: 0
   tileY: 0
+  parent: {fileID: 1699964044383344}
   map: {fileID: 0}
---- !u!212 &212021578262072574
+  gameObjectHex: {fileID: 1412926903855578}
+  gameObjectUnit: {fileID: 0}
+  spriteHex:
+  - {fileID: 21300000, guid: 46dbf545582497044bb11816b4d6bdf1, type: 3}
+  - {fileID: 21300000, guid: a0d0552a6f661cb4a9f66cb94892f7ed, type: 3}
+  - {fileID: 21300000, guid: a712e4c5dff4a9b42ac0c6774742a874, type: 3}
+  - {fileID: 21300000, guid: adda3c28157eab74eb0b33fb1d63c360, type: 3}
+  - {fileID: 21300000, guid: 1c066f3f937f3cc42b282ee176a02174, type: 3}
+  spriteUnit:
+  - {fileID: 21300000, guid: c2228955e5d13c2448e0ac21187055d0, type: 3}
+  unitPrefab: {fileID: 1798774236777850, guid: 8ed35fc6fac51574488449c788259f68, type: 2}
+--- !u!212 &212647138723222128
 SpriteRenderer:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1688315108576096}
+  m_GameObject: {fileID: 1412926903855578}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
