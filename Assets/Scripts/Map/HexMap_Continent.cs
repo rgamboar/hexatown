@@ -101,7 +101,7 @@ public class HexMap_Continent : HexMap
         ElevationToTiles();
         PutCity(2,4,2);
         units[20, 20] = 0;
-        units[21, 20] = 0;
+        units[21, 20] = 1;
 
     }
 

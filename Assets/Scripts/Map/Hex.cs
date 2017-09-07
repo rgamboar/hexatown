@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Hex {
 
+    public int size = 4;
     public Hex(int q, int r)
     {
         this.Q = q;
@@ -20,7 +21,7 @@ public class Hex {
 
     public Vector3 Position()
     {
-        return new Vector3(2 * (this.Q + this.R / 2f), ROOT * this.R, 0);
+        return new Vector3(2 * (this.Q + this.R / 2f) * size, ROOT * this.R * size, 0);
     }
     public static float Distance(Hex a, Hex b)
     {

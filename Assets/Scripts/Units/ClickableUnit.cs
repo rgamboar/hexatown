@@ -34,7 +34,7 @@ public class ClickableUnit : MonoBehaviour {
 
     public Vector3 Line(Node current)
     {
-        return new Vector3(2 * (current.x + current.y / 2f), Mathf.Sqrt(3) * current.y, 10);
+        return new Vector3(2 * (current.x + current.y / 2f)* 4, Mathf.Sqrt(3) * current.y * 4, 10);
     }
     void OnMouseDown()
     {
