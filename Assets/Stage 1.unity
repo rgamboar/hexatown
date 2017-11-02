@@ -200,14 +200,14 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 1c066f3f937f3cc42b282ee176a02174, type: 3}
   hexMovementCost: ffffffff01000000010000000200000003000000
   buildingSprites:
-  - {fileID: 21300000, guid: dd2bdc7ae8c76014a8ed6c2f83950f8e, type: 3}
+  - {fileID: 21300000, guid: a9217b4faaeb72345af1c90e8f526d75, type: 3}
   unitsSprites:
   - {fileID: 21300000, guid: af1a9ed3a075a9b40894008eabca5b06, type: 3}
-  - {fileID: 21300000, guid: 05882e8290a4e3e418876db3d253c48a, type: 3}
+  - {fileID: 21300000, guid: af1a9ed3a075a9b40894008eabca5b06, type: 3}
   buildingPrefab: {fileID: 1917783613596000, guid: b25fbb5a896ae474b847dd20dbeb54da,
     type: 2}
   unitPrefab: {fileID: 1756351402824130, guid: f18271644abbb244d899d9e3229c372d, type: 2}
-  ShowCordinates: 1
+  ShowCordinates: 0
   mapSizeX: 60
   mapSizeY: 30
 --- !u!4 &1355123212

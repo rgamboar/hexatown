@@ -239,7 +239,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 1c066f3f937f3cc42b282ee176a02174, type: 3}
   spriteUnit:
   - {fileID: 21300000, guid: af1a9ed3a075a9b40894008eabca5b06, type: 3}
-  - {fileID: 21300000, guid: 05882e8290a4e3e418876db3d253c48a, type: 3}
+  - {fileID: 21300000, guid: af1a9ed3a075a9b40894008eabca5b06, type: 3}
   unitPrefab: {fileID: 1798774236777850, guid: 8ed35fc6fac51574488449c788259f68, type: 2}
 --- !u!212 &212647138723222128
 SpriteRenderer:
