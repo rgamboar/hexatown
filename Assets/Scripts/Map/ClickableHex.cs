@@ -12,6 +12,7 @@ public class ClickableHex : MonoBehaviour {
     public GameObject gameObjectUnit;
     public Sprite[] spriteHex;
     public Sprite[] spriteUnit;
+    public Color[] spriteColor;
     public GameObject unitPrefab;
 
 
@@ -73,7 +74,9 @@ public class ClickableHex : MonoBehaviour {
     public void changeHex(int i)
     {
         SpriteRenderer sr = gameObjectHex.GetComponent<SpriteRenderer>();
-        sr.sprite = spriteHex[i];
+        sr.sprite = spriteHex[0];
+        sr.color = spriteColor[i];
+        //sr.color = Color.blue;
     }
     public void createUnit()
     {

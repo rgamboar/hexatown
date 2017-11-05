@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class CameraMovement : MonoBehaviour {
     public float speed;
@@ -33,7 +34,10 @@ public class CameraMovement : MonoBehaviour {
         CamaraSpeed();
         CamaraZoom();
         CamaraMouseMovement();
-
+        if (Input.GetKey(KeyCode.R) || Input.GetKey(KeyCode.D))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
     }
 
     void CamaraKeyboardMovement()

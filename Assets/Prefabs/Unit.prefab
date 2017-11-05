@@ -114,6 +114,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   map: {fileID: 0}
   parent: {fileID: 0}
+  halo: {fileID: 0}
   x: 0
   y: 0
 --- !u!122 &122651075483981834

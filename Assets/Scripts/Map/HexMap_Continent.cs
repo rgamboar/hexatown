@@ -70,14 +70,14 @@ public class HexMap_Continent : HexMap
         int numContinent = 3;
         int continentalSpacing = 15;
 
-        for (int c=1; c <= numContinent; c++)
+        for (int c = 1; c <= numContinent; c++)
         {
             int numSplats = Random.Range(5, 10);
             for (int i = 0; i < numSplats; i++)
             {
                 int radius = Random.Range(4, 8);
                 int y = Random.Range(radius, mapSizeY - radius);
-                int x = Random.Range(0, 10) - y/2 + (c* continentalSpacing);
+                int x = Random.Range(0, 10) - y / 2 + (c * continentalSpacing);
 
                 ElevateArea(x, y, radius);
             }
@@ -85,7 +85,7 @@ public class HexMap_Continent : HexMap
 
         float noiseRandom = Random.Range(0.5f, 1f);
         float noiseIncrement = 2f;
-        
+
         for (int x = 0; x < mapSizeX; x++)
         {
             for (int y = 0; y < mapSizeY; y++)
@@ -93,15 +93,31 @@ public class HexMap_Continent : HexMap
                 Hex h = getHex(x, y);
                 float n1 = Mathf.PerlinNoise((x * 2.5f) + noiseRandom, (y * 2.5f) + noiseRandom);
                 float n2 = Mathf.PerlinNoise((x * 4) + (2 * noiseRandom), (y * 4) + (2 * noiseRandom));
-                float n3 = ((n1 + n2)/2f - 0.5f);
+                float n3 = ((n1 + n2) / 2f - 0.5f);
                 h.Elevation += n3 * noiseIncrement;
             }
         }
 
         ElevationToTiles();
-        PutCity(2,8,8);
+        PutCity(2, 8, 8);
+        putTestUnit();
+
+    }
+
+    private void putTestUnit()
+    {
         units[20, 20] = 0;
         units[21, 20] = 1;
+
+        units[22, 20] = 2;
+        units[21, 21] = 2;
+        units[21, 19] = 2;
+        units[19, 19] = 2;
+        units[20, 19] = 2;
+        units[21, 22] = 2;
+        units[22, 19] = 2;
+        units[22, 21] = 2;
+        units[20, 21] = 2;
 
     }
 

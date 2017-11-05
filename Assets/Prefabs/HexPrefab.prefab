@@ -100,7 +100,7 @@ Transform:
   m_GameObject: {fileID: 1412926903855578}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -2}
-  m_LocalScale: {x: 2.4, y: 2.4, z: 2.4}
+  m_LocalScale: {x: 1.81, y: 1.81, z: 2.4}
   m_Children: []
   m_Father: {fileID: 4052496777599172}
   m_RootOrder: 1
@@ -232,14 +232,21 @@ MonoBehaviour:
   gameObjectHex: {fileID: 1412926903855578}
   gameObjectUnit: {fileID: 0}
   spriteHex:
-  - {fileID: 21300000, guid: 46dbf545582497044bb11816b4d6bdf1, type: 3}
+  - {fileID: 21300000, guid: f284240081a08b442b49808dc24e0819, type: 3}
   - {fileID: 21300000, guid: a0d0552a6f661cb4a9f66cb94892f7ed, type: 3}
   - {fileID: 21300000, guid: a712e4c5dff4a9b42ac0c6774742a874, type: 3}
   - {fileID: 21300000, guid: adda3c28157eab74eb0b33fb1d63c360, type: 3}
   - {fileID: 21300000, guid: 1c066f3f937f3cc42b282ee176a02174, type: 3}
   spriteUnit:
-  - {fileID: 21300000, guid: af1a9ed3a075a9b40894008eabca5b06, type: 3}
-  - {fileID: 21300000, guid: af1a9ed3a075a9b40894008eabca5b06, type: 3}
+  - {fileID: 21300000, guid: 8225792a85d9f7045b77b6ac84323131, type: 3}
+  - {fileID: 21300000, guid: 8fc93aef28c32884f8a02c23e35f5ca4, type: 3}
+  - {fileID: 21300000, guid: 8f94b2d4b58da1148963076d306f7939, type: 3}
+  spriteColor:
+  - {r: 0.3372549, g: 0.4745098, b: 0.85490197, a: 1}
+  - {r: 0.6313726, g: 0.5764706, b: 0.21176471, a: 1}
+  - {r: 0.3372549, g: 0.4745098, b: 0.16862746, a: 1}
+  - {r: 0.47058824, g: 0.45882353, b: 0.4509804, a: 1}
+  - {r: 0.88235295, g: 0.88235295, b: 0.88235295, a: 1}
   unitPrefab: {fileID: 1798774236777850, guid: 8ed35fc6fac51574488449c788259f68, type: 2}
 --- !u!212 &212647138723222128
 SpriteRenderer:
