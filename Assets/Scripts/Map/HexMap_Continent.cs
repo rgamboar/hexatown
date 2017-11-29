@@ -99,29 +99,40 @@ public class HexMap_Continent : HexMap
         }
 
         ElevationToTiles();
-        PutCity(2, 8, 8);
+        PutStartingPoint(2,15,60);
+        PutCity(2, 6, 6);
         putTestUnit();
 
     }
 
     private void putTestUnit()
     {
-        units[20, 20] = 0;
-        units[21, 20] = 1;
-
-        units[22, 20] = 2;
-        units[21, 21] = 2;
-        units[21, 19] = 2;
-        units[19, 19] = 2;
-        units[20, 19] = 2;
-        units[21, 22] = 2;
-        units[22, 19] = 2;
-        units[22, 21] = 2;
-        units[20, 21] = 2;
+        if (getHex(start.x, start.y + 1).Elevation > 0)
+        {
+            units[start.x, start.y + 1] = 0;
+        }
+        if (getHex(start.x, start.y - 1).Elevation > 0)
+        {
+            units[start.x, start.y - 1] = 0;
+        }
+        if (getHex(start.x-1, start.y + 1).Elevation > 0)
+        {
+            units[start.x-1, start.y + 1] = 0;
+        }
+       
+       // units[22, 20] = 2;
+       // units[21, 21] = 2;
+       // units[21, 19] = 2;
+       // units[19, 19] = 2;
+       // units[20, 19] = 2;
+       // units[21, 22] = 2;
+       // units[22, 19] = 2;
+       // units[22, 21] = 2;
+       // units[20, 21] = 2;
 
     }
 
-    void PutCity(int startTileType, int radius, int totalGoodTiles, int quantity=1000)
+    void PutCity(int startTileType, int radius, int totalGoodTiles, int quantity = 1000)
     {
         int x = radius;
         int y = radius;
@@ -129,7 +140,7 @@ public class HexMap_Continent : HexMap
         int cities = 0;
         while (cities < quantity)
         {
-            Hex h = getHex(x,y);
+            Hex h = getHex(x, y);
             if (ElevationToOneTile(h) == startTileType)
             {
                 Hex[] areaHexes = GetHexesRadius(h, radius);
@@ -152,6 +163,50 @@ public class HexMap_Continent : HexMap
                     buildings[x, y] = 0;
                     cities++;
                     //  return;
+                }
+            }
+            x++;
+            if (x > mapSizeX - radius)
+            {
+                x = radius;
+                y++;
+                if (y > mapSizeY - radius)
+                {
+                    return;
+                }
+
+            }
+
+        }
+    }
+    void PutStartingPoint(int startTileType, int radius, int totalGoodTiles, int quantity = 1)
+    {
+        int x = radius;
+        int y = radius;
+
+        int cities = 0;
+        while (cities < quantity)
+        {
+            Hex h = getHex(x, y);
+            if (ElevationToOneTile(h) == startTileType)
+            {
+                Hex[] areaHexes = GetHexesRadius(h, radius);
+                int counter = 0;
+                foreach (Hex hex in areaHexes)
+                {
+                    if (ElevationToOneTile(hex) == startTileType)
+                    {
+                        counter += 1;
+                    }
+
+                }
+                if (counter >= totalGoodTiles)
+                {
+                    buildings[x, y] = 1;
+                    start = new Node();
+                    start.x = x;
+                    start.y = y;
+                    return;
                 }
             }
             x++;

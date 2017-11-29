@@ -7,6 +7,7 @@ public class Node
 {
     private List<Node> neightbours;
     public int costOfMovement = -1;
+    public int normalCostOfMovement = -1;
     public int x;
     public int y;
 

@@ -28,4 +28,13 @@ public class Hex {
         return ((Mathf.Abs(a.R - b.R) + Mathf.Abs(a.S - b.S) + Mathf.Abs(a.Q - b.Q)) / 2);
     }
 
+    public int X()
+    {
+        return Q;
+    }
+    public int Y()
+    {
+        return R;
+    }
+
 }

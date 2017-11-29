@@ -7,7 +7,11 @@ using System.Linq;
 
 public class HexMap : MonoBehaviour {
 
+
+    public List<Node> path;
+    public GameObject Camara;
     public GameObject SelectedUnit;
+    public ClickableUnit SUcu;
     public GameObject hexPrefab;
     public GameObject buildingMaster;
     public GameObject unitMaster;
@@ -23,11 +27,11 @@ public class HexMap : MonoBehaviour {
     public bool ShowCordinates = false;
     public Hex[,] hexes;
     public Node[,] nodes;
+    public Node start;
     private Dictionary<Hex, GameObject> hexToGameObjectMap;
 
     public int mapSizeX = 25;
     public int mapSizeY = 20;
-
 
     private float offsetX, offsetY;
 
@@ -48,8 +52,8 @@ public class HexMap : MonoBehaviour {
     {
         GenerateMap();
         GenerateMapData();
-        GenerateMapVisual();
         GenerateNeightboards();
+        GenerateMapVisual();
     }
 
     public void GenerateMap()
@@ -117,19 +121,32 @@ public class HexMap : MonoBehaviour {
                 {
                     ct.createUnit();
                     ct.changeUnit(units[x, y]);
+                    nodes[x, y].costOfMovement = -1;
                 }
                 if (buildings[x, y] != -1)
                 {
-                    GameObject goBuilding = (GameObject)Instantiate(buildingPrefab, h.Position(), Quaternion.identity, buildingMaster.transform);
-                    SpriteRenderer srBuilding = goBuilding.GetComponentInChildren<SpriteRenderer>();
-                    srBuilding.sprite = buildingSprites[buildings[x, y]];
-                    srBuilding.sortingOrder = 1;
+                    ct.createBuilding(buildings[x, y], h);
+                    nodes[x, y].costOfMovement = -1;
                 }
 
             }
         }
     }
 
+    public void ResetTurn()
+    {
+        for (int x = 0; x < mapSizeX; x++)
+        {
+            for (int y = 0; y < mapSizeY; y++)
+            {
+                if (units[x,y] != -1)
+                {
+                    ClickableUnit cu = hexToGameObjectMap[hexes[x,y]].GetComponentInChildren<ClickableUnit>();
+                    cu.turnMovement = cu.maxMovement;
+                }
+            }
+        }
+    }
 
     public Hex[] GetHexesRadius(Hex center, int radius)
     {
@@ -147,15 +164,93 @@ public class HexMap : MonoBehaviour {
 
     public void MoveSelectedUnit(int x, int y)
     {
-        Hex h = new Hex(x, y);
-        SelectedUnit.transform.position = h.Position();
+        GameObject hex= hexToGameObjectMap[hexes[x, y]];
+        SelectedUnit.transform.parent = hex.transform;
+        SelectedUnit.transform.position = hexes[x, y].Position();
+        ClickableUnit cu = hex.GetComponentInChildren<ClickableUnit>();
+
+        ChangeUnitHex(cu.x, cu.y);
+        ChangeUnitHex(x, y, SelectedUnit);
     }
 
-    public void MoveUnit(int endx,int endy)
+    public void ChangeUnitHex(int x, int y, GameObject unit=null)
     {
+        GameObject hex = hexToGameObjectMap[hexes[x, y]];
+        ClickableHex ch = hex.GetComponentInChildren<ClickableHex>();
+        ch.gameObjectUnit = unit;
+        if (unit == null)
+        {
+            units[x, y] = -1;
+            nodes[x, y].costOfMovement = nodes[x,y].normalCostOfMovement;
+        }
+        else
+        {
+            ClickableUnit cu = hex.GetComponentInChildren<ClickableUnit>();
+            units[x, y] = 1;
+            cu.x = x;
+            cu.y = y;
+            nodes[x, y].costOfMovement = -1;
+        }
+    }
+
+    public void MoveUnit(int endx, int endy)
+    {
+        if (path != null)
+        {
+            Node last = nodes[endx, endy];
+            if (path.Contains(last))
+            {
+                Hex actual = hexes[endx, endy];
+                int maxMovement = SUcu.turnMovement;
+                int counter = 0;
+                foreach (Node i in path)
+                {
+                    actual = hexes[i.x, i.y];
+                    if (i.costOfMovement != -1)
+                    {
+                        counter += i.costOfMovement;
+                    }
+                    if (actual.X() == last.x && actual.Y() == last.y) break;
+                    if (counter > maxMovement) break;
+                }
+                togglePath(false);
+                ChangeMPSelectedUnit(-counter);
+                MoveSelectedUnit(actual.X(), actual.Y());
+                path = null;
+                return;
+            }
+        }
+        togglePath(false);
         if (SelectedUnit != null)
         {
-            SelectedUnit.GetComponentInChildren<ClickableUnit>().path = PathFindHex(endx, endy);
+            path = PathFindHex(endx, endy);
+        }
+        togglePath(true);
+    }
+
+    private void ChangeMPSelectedUnit(int counter)
+    {
+        SUcu.turnMovement += counter;
+    }
+
+    public void togglePath(Boolean option)
+    {
+        if (path == null) return;
+        int maxMovement = 100;
+        if (option)
+        {
+            maxMovement = SUcu.turnMovement;
+        }
+        int counter = 0;
+        foreach (Node i in path)
+        {
+            ClickableHex ct = hexToGameObjectMap[hexes[i.x, i.y]].GetComponentInChildren<ClickableHex>();
+            if (i.costOfMovement > 0) ct.showPath(option);
+            if (i.costOfMovement != -1)
+            {
+                counter += i.costOfMovement;
+            }
+            if (counter > maxMovement) return;
         }
     }
 
@@ -179,14 +274,13 @@ public class HexMap : MonoBehaviour {
             {
                 previous[n] = null;
                 unvisited.Add(n);
-                if (n == start)
-                {
-                    dist[n] = 0;
-                }
-                else
-                {
-                    dist[n] = Mathf.Infinity;
-                }
+                dist[n] = Mathf.Infinity;
+            }
+            else if (n == start)
+            {
+                previous[n] = null;
+                unvisited.Add(n);
+                dist[n] = 0;
             }
         }
 
@@ -235,6 +329,22 @@ public class HexMap : MonoBehaviour {
 
     }
 
+    public void SpawnUnit(int x, int y, int type)
+    {
+        List<Node> neightbours = nodes[x, y].NeightboursLand;
+        foreach (Node i in neightbours)
+        {
+            if (units[i.x, i.y] == -1)
+            {
+                units[i.x, i.y] = type;
+                ClickableHex ct = hexToGameObjectMap[hexes[i.x, i.y]].GetComponentInChildren<ClickableHex>();
+                ct.createUnit();
+                ct.changeUnit(units[i.x, i.y]);
+                nodes[i.x, i.y].costOfMovement = -1;
+                break;
+            }
+        }
+    }
 
     private void GenerateNeightboards()
     {
@@ -280,6 +390,7 @@ public class HexMap : MonoBehaviour {
 
                 nodes[x, y].Neightbours = neigh;
                 nodes[x, y].costOfMovement = hexMovementCost[tiles[x, y]];
+                nodes[x, y].normalCostOfMovement = hexMovementCost[tiles[x, y]];
                 nodes[x, y].x = x;
                 nodes[x, y].y = y;
 

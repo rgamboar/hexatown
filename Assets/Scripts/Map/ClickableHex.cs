@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,11 +11,14 @@ public class ClickableHex : MonoBehaviour {
     public List<Node> path;
     public GameObject gameObjectHex;
     public GameObject gameObjectUnit;
+    public GameObject gameObjectBuilding;
     public Sprite[] spriteHex;
     public Sprite[] spriteUnit;
     public Color[] spriteColor;
     public GameObject unitPrefab;
-
+    public Component halo;
+    public GameObject buildingPrefab;
+    public Sprite[] buildingSprites;
 
     float t0;
     private void Start()
@@ -22,7 +26,9 @@ public class ClickableHex : MonoBehaviour {
         t0 = 0f;
         parent = transform.parent.gameObject;
         path = null;
+        halo = gameObjectHex.GetComponent("Halo");
     }
+  
     void OnMouseDown()
     {
         t0 = Time.time;
@@ -38,27 +44,30 @@ public class ClickableHex : MonoBehaviour {
                     map.SelectedUnit.GetComponent<ClickableUnit>().changeHalo(false);
                 }
                 map.SelectedUnit = gameObjectUnit;
+                map.SUcu = gameObjectUnit.GetComponent<ClickableUnit>();
                 changeHalo(true);
             }
-
-            Debug.Log("Clicked a hex");
+            
             //map.MoveSelectedUnit(tileX, tileY);
             map.MoveUnit(tileX, tileY);
-
+            if (gameObjectBuilding != null)
+            {
+                map.SpawnUnit(tileX, tileY, 1);
+            }
 
         }
     }
     private void Update()
     {
-        if (path != null)
-        {
-            int currentNode = 0;
-            while (currentNode <= path.Count - 2)
-            {
-                Debug.DrawLine(Line(path[currentNode]), Line(path[currentNode + 1]), Color.red);
-                currentNode++;
-            }
-        }
+     //   if (path != null)
+     //   {
+     //       int currentNode = 0;
+     //       while (currentNode <= path.Count - 2)
+     //       {
+     //           Debug.DrawLine(Line(path[currentNode]), Line(path[currentNode + 1]), Color.red);
+     //           currentNode++;
+     //       }
+     //   }
     }
 
     public Vector3 Line(Node current)
@@ -71,12 +80,16 @@ public class ClickableHex : MonoBehaviour {
         gameObjectUnit.GetComponent<ClickableUnit>().changeHalo(option);
     }
 
+    public void showPath(bool option)
+    {
+        halo.GetType().GetProperty("enabled").SetValue(halo, option, null);
+    }
+
     public void changeHex(int i)
     {
         SpriteRenderer sr = gameObjectHex.GetComponent<SpriteRenderer>();
         sr.sprite = spriteHex[0];
         sr.color = spriteColor[i];
-        //sr.color = Color.blue;
     }
     public void createUnit()
     {
@@ -91,7 +104,22 @@ public class ClickableHex : MonoBehaviour {
     {
         SpriteRenderer sr = gameObjectUnit.GetComponent<SpriteRenderer>();
         sr.sprite = spriteUnit[i];
+        ClickableUnit cu = gameObjectUnit.GetComponent<ClickableUnit>();
+        cu.maxMovement = 5;
+        cu.turnMovement = 5;
     }
 
+    internal void createBuilding(int type, Hex h)
+    {
+        gameObjectBuilding = (GameObject)Instantiate(buildingPrefab, h.Position(), Quaternion.identity, parent.transform);
+        SpriteRenderer srBuilding = gameObjectBuilding.GetComponentInChildren<SpriteRenderer>();
+        srBuilding.sprite = buildingSprites[type];
+        if (type == 1)
+        {
+            Camera.main.transform.position = new Vector3(gameObjectBuilding.transform.position.x, gameObjectBuilding.transform.position.y, Camera.main.transform.position.z);
+        }
+        srBuilding.sortingOrder = 1;
+
+    }
 }
 

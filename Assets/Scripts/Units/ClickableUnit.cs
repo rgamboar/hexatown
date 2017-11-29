@@ -11,6 +11,8 @@ public class ClickableUnit : MonoBehaviour {
     public int x;
     public int y;
     public List<Node> path;
+    public int maxMovement;
+    public int turnMovement;
 
     private void Start()
     {
@@ -50,6 +52,7 @@ public class ClickableUnit : MonoBehaviour {
             }
             changeHalo(true);
             map.SelectedUnit = parent;
+            map.SUcu = this;
             Debug.Log("Clicked a unit");
         }   
     }

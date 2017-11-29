@@ -54,6 +54,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4073925472496906}
   - component: {fileID: 212647138723222128}
+  - component: {fileID: 122667065875016668}
   m_Layer: 0
   m_Name: SpriteHex
   m_TagString: Untagged
@@ -248,6 +249,18 @@ MonoBehaviour:
   - {r: 0.47058824, g: 0.45882353, b: 0.4509804, a: 1}
   - {r: 0.88235295, g: 0.88235295, b: 0.88235295, a: 1}
   unitPrefab: {fileID: 1798774236777850, guid: 8ed35fc6fac51574488449c788259f68, type: 2}
+  halo: {fileID: 0}
+--- !u!122 &122667065875016668
+Halo:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1412926903855578}
+  m_Enabled: 0
+  m_Color:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_Size: 1
 --- !u!212 &212647138723222128
 SpriteRenderer:
   m_ObjectHideFlags: 1
