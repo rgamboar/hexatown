@@ -114,7 +114,7 @@ Transform:
   m_GameObject: {fileID: 1337626041993760}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 4.8, y: 4.8, z: 4.8}
+  m_LocalScale: {x: 4.8, y: 4.8, z: 1}
   m_Children: []
   m_Father: {fileID: 4052496777599172}
   m_RootOrder: 0
@@ -232,6 +232,7 @@ MonoBehaviour:
   map: {fileID: 0}
   gameObjectHex: {fileID: 1412926903855578}
   gameObjectUnit: {fileID: 0}
+  gameObjectBuilding: {fileID: 0}
   spriteHex:
   - {fileID: 21300000, guid: f284240081a08b442b49808dc24e0819, type: 3}
   - {fileID: 21300000, guid: a0d0552a6f661cb4a9f66cb94892f7ed, type: 3}
@@ -250,6 +251,12 @@ MonoBehaviour:
   - {r: 0.88235295, g: 0.88235295, b: 0.88235295, a: 1}
   unitPrefab: {fileID: 1798774236777850, guid: 8ed35fc6fac51574488449c788259f68, type: 2}
   halo: {fileID: 0}
+  buildingPrefab: {fileID: 1917783613596000, guid: b25fbb5a896ae474b847dd20dbeb54da,
+    type: 2}
+  buildingSprites:
+  - {fileID: 21300000, guid: b77c26f182220c14f821000dbfdcce09, type: 3}
+  - {fileID: 21300000, guid: 03e79e097ae2eee4d9dd45caa269c998, type: 3}
+  owner: 0
 --- !u!122 &122667065875016668
 Halo:
   m_ObjectHideFlags: 1

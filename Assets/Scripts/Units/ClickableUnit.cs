@@ -13,6 +13,10 @@ public class ClickableUnit : MonoBehaviour {
     public List<Node> path;
     public int maxMovement;
     public int turnMovement;
+    public int owner;
+    public int attack = 1;
+    public int type;
+
 
     private void Start()
     {

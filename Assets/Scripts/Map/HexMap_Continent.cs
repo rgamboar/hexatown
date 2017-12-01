@@ -101,8 +101,7 @@ public class HexMap_Continent : HexMap
         ElevationToTiles();
         PutStartingPoint(2,15,60);
         PutCity(2, 6, 6);
-        putTestUnit();
-
+        //putTestUnit();
     }
 
     private void putTestUnit()
@@ -119,16 +118,6 @@ public class HexMap_Continent : HexMap
         {
             units[start.x-1, start.y + 1] = 0;
         }
-       
-       // units[22, 20] = 2;
-       // units[21, 21] = 2;
-       // units[21, 19] = 2;
-       // units[19, 19] = 2;
-       // units[20, 19] = 2;
-       // units[21, 22] = 2;
-       // units[22, 19] = 2;
-       // units[22, 21] = 2;
-       // units[20, 21] = 2;
 
     }
 
@@ -151,7 +140,7 @@ public class HexMap_Continent : HexMap
                     {
                         counter += 1;
                     }
-                    if (buildings[hex.Q, hex.R] == 0)
+                    if (buildings[hex.Q, hex.R] == 0 || buildings[hex.Q, hex.R] == 1)
                     {
                         counter = 0;
                         break;

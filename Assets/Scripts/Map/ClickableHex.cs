@@ -20,6 +20,8 @@ public class ClickableHex : MonoBehaviour {
     public GameObject buildingPrefab;
     public Sprite[] buildingSprites;
 
+    public int owner;
+
     float t0;
     private void Start()
     {
@@ -37,37 +39,67 @@ public class ClickableHex : MonoBehaviour {
     {
         if ((Time.time - t0) < 0.2f)
         {
-            if (map.SelectedUnit != gameObjectUnit && gameObjectUnit != null)
+            if (owner == 0)
             {
-                if (map.SelectedUnit != null)
+                if (map.SelectedUnit != gameObjectUnit && gameObjectUnit != null)
                 {
-                    map.SelectedUnit.GetComponent<ClickableUnit>().changeHalo(false);
+                    if (map.SelectedUnit != null)
+                    {
+                        map.SelectedUnit.GetComponent<ClickableUnit>().changeHalo(false);
+                    }
+                    map.SelectedUnit = gameObjectUnit;
+                    map.SUcu = gameObjectUnit.GetComponent<ClickableUnit>();
+                    changeHalo(true);
                 }
-                map.SelectedUnit = gameObjectUnit;
-                map.SUcu = gameObjectUnit.GetComponent<ClickableUnit>();
-                changeHalo(true);
+
+                map.MoveUnit(tileX, tileY);
+
             }
-            
-            //map.MoveSelectedUnit(tileX, tileY);
-            map.MoveUnit(tileX, tileY);
+            if (gameObjectUnit != null && map.SelectedUnit != null && gameObjectUnit.GetComponent<ClickableUnit>().owner != map.SUcu.owner)
+            {
+                if (map.SelectedUnit.GetComponent<ClickableUnit>().attack > 0)
+                {
+                    if (isNeightboard())
+                    {
+                        GetAttack();
+                    }
+                }
+            }
             if (gameObjectBuilding != null)
             {
-                map.SpawnUnit(tileX, tileY, 1);
+                int unit;
+                if (owner == 0) unit = 2;
+                else unit = UnityEngine.Random.Range(0, 2);
+                map.SpawnUnit(tileX, tileY, unit);
             }
 
         }
     }
+
+    public void GetAttack()
+    {
+
+        map.units[tileX, tileY] = -1;
+        owner = 0;
+        Destroy(gameObjectUnit);
+        map.SUcu.attack = 0;
+        map.nodes[tileX, tileY].costOfMovement = map.nodes[tileX, tileY].normalCostOfMovement;
+    }
+
+    private bool isNeightboard()
+    {
+        List<Node> options = map.nodes[map.SUcu.x, map.SUcu.y].Neightbours;
+        ClickableUnit cu = gameObjectUnit.GetComponent<ClickableUnit>();
+        foreach (Node i in options)
+        {
+            if (i.x == cu.x && i.y == cu.y) return true;
+        }
+        return false;
+
+    }
+
     private void Update()
     {
-     //   if (path != null)
-     //   {
-     //       int currentNode = 0;
-     //       while (currentNode <= path.Count - 2)
-     //       {
-     //           Debug.DrawLine(Line(path[currentNode]), Line(path[currentNode + 1]), Color.red);
-     //           currentNode++;
-     //       }
-     //   }
     }
 
     public Vector3 Line(Node current)
@@ -105,6 +137,18 @@ public class ClickableHex : MonoBehaviour {
         SpriteRenderer sr = gameObjectUnit.GetComponent<SpriteRenderer>();
         sr.sprite = spriteUnit[i];
         ClickableUnit cu = gameObjectUnit.GetComponent<ClickableUnit>();
+        cu.type = i;
+        if (i < 2)
+        {
+            owner = 0;
+            cu.owner = 0;
+        }
+        else
+        {
+            owner = 1;
+            cu.owner = 1;
+        }
+
         cu.maxMovement = 5;
         cu.turnMovement = 5;
     }
@@ -113,7 +157,7 @@ public class ClickableHex : MonoBehaviour {
     {
         gameObjectBuilding = (GameObject)Instantiate(buildingPrefab, h.Position(), Quaternion.identity, parent.transform);
         SpriteRenderer srBuilding = gameObjectBuilding.GetComponentInChildren<SpriteRenderer>();
-        srBuilding.sprite = buildingSprites[type];
+        srBuilding.sprite = buildingSprites[owner];
         if (type == 1)
         {
             Camera.main.transform.position = new Vector3(gameObjectBuilding.transform.position.x, gameObjectBuilding.transform.position.y, Camera.main.transform.position.z);
