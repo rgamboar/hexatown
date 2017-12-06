@@ -149,8 +149,8 @@ public class ClickableHex : MonoBehaviour {
             cu.owner = 1;
         }
 
-        cu.maxMovement = 5;
-        cu.turnMovement = 5;
+        cu.maxMovement = 1;
+        cu.turnMovement = 1;
     }
 
     internal void createBuilding(int type, Hex h)
