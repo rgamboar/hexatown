@@ -7,6 +7,7 @@ public class EventHandler : MonoBehaviour {
 
     public GameObject tutorial;
     public bool tutorialVisibility;
+    public BuildingInterface buildingInterface;
 
     public void startGame()
     {
@@ -25,6 +26,7 @@ public class EventHandler : MonoBehaviour {
     {
         if (Input.GetKeyDown("escape"))
         {
+            buildingInterface.CloseLeftInterface();
             if (tutorialVisibility)
             {
                 tutorialVisibility = !tutorialVisibility;

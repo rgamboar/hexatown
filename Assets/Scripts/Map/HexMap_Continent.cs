@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class HexMap_Continent : HexMap
 {
@@ -67,15 +69,15 @@ public class HexMap_Continent : HexMap
         NoneUnit();
 
 
-        int numContinent = 3;
-        int continentalSpacing = 15;
+        int numContinent = 1;
+        int continentalSpacing = 20;
 
         for (int c = 1; c <= numContinent; c++)
         {
-            int numSplats = Random.Range(5, 10);
+            int numSplats = Random.Range(10, 15);
             for (int i = 0; i < numSplats; i++)
             {
-                int radius = Random.Range(4, 8);
+                int radius = Random.Range(4, 12);
                 int y = Random.Range(radius, mapSizeY - radius);
                 int x = Random.Range(0, 10) - y / 2 + (c * continentalSpacing);
 
@@ -99,8 +101,9 @@ public class HexMap_Continent : HexMap
         }
 
         ElevationToTiles();
-        PutStartingPoint(2,15,60);
-        PutCity(2, 6, 6);
+        PutStartingPoint(2,10,6);
+        PutCity(2, 6, 10, 6);
+        ElevationToTiles();
         //putTestUnit();
     }
 
@@ -149,7 +152,7 @@ public class HexMap_Continent : HexMap
                 }
                 if (counter >= totalGoodTiles)
                 {
-                    buildings[x, y] = 0;
+                    buildings[x, y] = 1;
                     cities++;
                     //  return;
                 }
@@ -191,10 +194,11 @@ public class HexMap_Continent : HexMap
                 }
                 if (counter >= totalGoodTiles)
                 {
-                    buildings[x, y] = 1;
+                    buildings[x, y] = 0;
                     start = new Node();
                     start.x = x;
                     start.y = y;
+                    RaiseStartingCity(x, y);
                     return;
                 }
             }
@@ -212,6 +216,53 @@ public class HexMap_Continent : HexMap
 
         }
     }
+
+    private void RaiseStartingCity(int x, int y)
+    {
+        if (x < mapSizeX - 1)
+        {
+            Hex h = getHex(x + 1, y);
+            RaiseTile(h);
+        }
+        if (y < mapSizeY - 1)
+        {
+            Hex h = getHex(x, y + 1);
+            RaiseTile(h);
+        }
+        if (x > 0)
+        {
+            Hex h = getHex(x - 1, y);
+            RaiseTile(h);
+        }
+        if (y > 0)
+        {
+            Hex h = getHex(x, y - 1);
+            RaiseTile(h);
+        }
+        if (x > 0 && y < mapSizeY - 1)
+        {
+            Hex h = getHex(x - 1, y + 1);
+            RaiseTile(h);
+        }
+        if (y > 0 && x < mapSizeY - 1)
+        {
+            Hex h = getHex(x + 1, y - 1);
+            RaiseTile(h);
+        }
+    }
+
+    private void RaiseTile(Hex h)
+    {
+        while (true)
+        {
+            if (h.Elevation < 0f)
+            {
+                h.Elevation += 0.25f;
+            }
+            else break;
+        }
+    }
+
     void ElevateArea(int x, int y, int radius)
     {
         Hex center = getHex(x, y);

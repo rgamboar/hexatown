@@ -14,7 +14,7 @@ TagManager:
   - 
   - 
   - Unit
-  - 
+  - Unit HP
   - 
   - 
   - 
@@ -38,6 +38,12 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Unit HP
+    uniqueID: 1846183925
+    locked: 0
+  - name: text
+    uniqueID: 1634927411
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0

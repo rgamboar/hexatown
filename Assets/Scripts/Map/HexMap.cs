@@ -1,22 +1,17 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
-using System.Linq;
 using UnityEngine.SceneManagement;
-
+using UnityEngine.UI;
 
 public class HexMap : MonoBehaviour {
 
 
-    public List<Node> path;
+    private List<Node> path;
     public GameObject Camara;
-    public GameObject SelectedUnit;
-    public ClickableUnit SUcu;
+    public Unit SelectedUnit;
     public GameObject hexPrefab;
-    public GameObject buildingMaster;
-    public GameObject unitMaster;
     public Sprite[] hexSprites;
     public int[] hexMovementCost;
     public Sprite[] buildingSprites;
@@ -27,10 +22,15 @@ public class HexMap : MonoBehaviour {
     public GameObject unitPrefab;
     public int[,] units;
     public bool ShowCordinates = false;
-    public Hex[,] hexes;
-    public Node[,] nodes;
     public Node start;
-    private Dictionary<Hex, GameObject> hexToGameObjectMap;
+    public Map controlMap;
+    public int turn = 1;
+
+
+    public Text turnCounter;
+
+    public BuildingInterface buildingInterface;
+    
 
     public int mapSizeX = 25;
     public int mapSizeY = 20;
@@ -47,29 +47,41 @@ public class HexMap : MonoBehaviour {
         {
             return null;
         }
-        return hexes[x, y];
+        return controlMap.hexes[x, y];
+    }
+
+    internal void ShowBuildingMenu(Building building)
+    {
+        buildingInterface.OpenLeftInterface(building.x,building.y);
     }
 
     void Start()
     {
+        controlMap = new Map();
+        controlMap.sizeX = mapSizeX;
+        controlMap.sizeY = mapSizeY;
+        controlMap.map = this;
         GenerateMap();
         GenerateMapData();
-        GenerateNeightboards();
+        controlMap.GenerateNeightboards(tiles);
         GenerateMapVisual();
     }
 
     public void GenerateMap()
     {
-        hexes = new Hex[mapSizeX, mapSizeY];
-        hexToGameObjectMap = new Dictionary<Hex, GameObject>();
+        controlMap.hexes = new Hex[mapSizeX, mapSizeY];
+        controlMap.Units = new Unit[mapSizeX, mapSizeY];
+        controlMap.Buildings = new Building[mapSizeX, mapSizeY];
         for (int x = 0; x < mapSizeX; x++)
         {
             for (int y = 0; y < mapSizeY; y++)
             {
                 Hex h = new Hex(x, y);
-                hexes[x, y] = h;
+                controlMap.hexes[x, y] = h;
                 GameObject go = (GameObject)Instantiate(hexPrefab, h.Position(), Quaternion.identity, this.transform);
-                hexToGameObjectMap[h] = go;
+                h.GO = go;
+                h.ch = go.GetComponentInChildren<ClickableHex>();
+                h.ch.hex = h;
                 if (ShowCordinates)
                 {
                     go.GetComponentInChildren<TextMesh>().text = string.Format("{0},{1}", h.Q, h.R);
@@ -110,45 +122,56 @@ public class HexMap : MonoBehaviour {
         {
             for (int y = 0; y < mapSizeY; y++)
             {
-                Hex h = hexes[x, y];
+                Hex h = controlMap.hexes[x, y];
 
-                ClickableHex ct = hexToGameObjectMap[h].GetComponentInChildren<ClickableHex>();
-                ct.tileX = x;
-                ct.tileY = y;
-                ct.map = this;
-
-                ct.changeHex(tiles[x, y]);
+                ClickableHex ch = h.GO.GetComponentInChildren<ClickableHex>();
+                h.ch = ch;
+                ch.x = x;
+                ch.y = y;
+                ch.map = this;
+                ch.changeHex(tiles[x, y]);
 
                 if (units[x, y] != -1)
                 {
-                    ct.createUnit();
-                    ct.changeUnit(units[x, y]);
-                    nodes[x, y].costOfMovement = -1;
+                    controlMap.CreateUnit(units[x, y], x, y, 0);
                 }
                 if (buildings[x, y] != -1)
                 {
-                    ct.owner = buildings[x, y];
-                    ct.createBuilding(buildings[x, y], h);
-                    nodes[x, y].costOfMovement = -1;
+                    controlMap.CreateBuilding(buildings[x,y], x, y, buildings[x, y]);
                 }
 
             }
         }
     }
+    
 
     public void ResetTurn()
     {
-        togglePath(false);
+        turn++;
+        turnCounter.text = "Turn: " + turn;
+        buildingInterface.Produce(turn);
+        changePath(null);
+        if (SelectedUnit != null) SelectedUnit.cu.changeHalo(false);
         SelectedUnit = null;
-        SUcu = null;
         Hex h = null;
         for (int x = 0; x < mapSizeX; x++)
         {
             for (int y = 0; y < mapSizeY; y++)
             {
-                if (buildings[x, y] == 1)
+                if (controlMap.Buildings[x, y] != null)
                 {
-                    h = hexes[x, y];
+                    if (buildings[x, y] == 0)
+                    {
+                        h = controlMap.hexes[x, y];
+                    }
+                    else if (controlMap.Buildings[x, y].owner == 1)
+                    {
+                        controlMap.Buildings[x, y].RandomSpawn(turn);
+                    }
+                }
+                if (controlMap.Units[x, y] != null)
+                {
+                    controlMap.Units[x, y].ResetTurn();
                 }
             }
         }
@@ -157,44 +180,33 @@ public class HexMap : MonoBehaviour {
         {
             for (int y = 0; y < mapSizeY; y++)
             {
-                if (units[x,y] != -1)
+                if (controlMap.Units[x, y] != null)
                 {
-                    ClickableUnit cu = hexToGameObjectMap[hexes[x,y]].GetComponentInChildren<ClickableUnit>();
-                    if (cu == null)
+                    Unit u = controlMap.Units[x, y];
+                    if (u.owner == 1 && u.turnMovement> 0)
                     {
-                        units[x, y] = -1;
-                        nodes[x, y].costOfMovement = nodes[x, y].normalCostOfMovement;
-                    }
-                    else
-                    {
-                        cu.turnMovement = cu.maxMovement;
-                        cu.attack = 1;
+                        MoveUnitCloser(h.x, h.y, u);
+                        if (u.turnAttacks > 0)
+                        {
+                            AttackClose();
+                        }
                     }
                 }
-                if (units[x,y] == 2)
-                {
-                    if (hexToGameObjectMap[hexes[x, y]].GetComponentInChildren<ClickableHex>().owner == 1)
-                    {
-                        print(x + " " + y);
-                        MoveUnitCloser(h.X(), h.Y(), hexToGameObjectMap[hexes[x, y]].GetComponentInChildren<ClickableHex>().gameObjectUnit);
-                        AttackClose();
-                    }
-                }
+                
             }
         }
 
 
         togglePath(false);
         SelectedUnit = null;
-        SUcu = null;
     }
 
     private void checkGameOver(Hex h)
     {
-        List<Node> options = nodes[h.X(), h.Y()].Neightbours;
+        List<Node> options = controlMap.nodes[h.x, h.y].Neightbours;
         foreach (Node i in options)
         {
-            if (units[i.x, i.y] == 2)
+            if (controlMap.Units[i.x, i.y] !=  null && controlMap.Units[i.x, i.y].owner == 2)
             {
                 SceneManager.LoadScene(2);
             }
@@ -203,17 +215,16 @@ public class HexMap : MonoBehaviour {
 
     private void AttackClose()
     {
-        List<Node> options = nodes[SUcu.x, SUcu.y].Neightbours;
+        List<Node> options = controlMap.nodes[SelectedUnit.x, SelectedUnit.y].Neightbours;
         foreach (Node i in options)
         {
-            if (SUcu.attack > 0)
+            if (SelectedUnit.turnAttacks > 0)
             {
-                if (units[i.x,i.y] > -1)
+                if (controlMap.Units[i.x, i.y] != null)
                 {
-                    ClickableHex temp = hexToGameObjectMap[hexes[i.x, i.y]].GetComponentInChildren<ClickableHex>();
-                    if (temp.owner != SUcu.owner)
+                    if (controlMap.Units[i.x, i.y].owner != controlMap.Units[SelectedUnit.x, SelectedUnit.y].owner)
                     {
-                        temp.GetAttack();
+                        controlMap.AttackUnit(SelectedUnit, controlMap.Units[i.x, i.y]);
                     }
                 }
                 
@@ -238,7 +249,7 @@ public class HexMap : MonoBehaviour {
 
     private List<Node> getNodesRadius(int x, int y, int tries)
     {
-        Node start = nodes[x, y];
+        Node start = controlMap.nodes[x, y];
         List<Node> startList = start.Neightbours;
         List<Node> result = new List<Node>();
         foreach (Node i in startList)
@@ -256,64 +267,30 @@ public class HexMap : MonoBehaviour {
 
     }
 
-    public void MoveSelectedUnit(int x, int y)
-    {
-        GameObject hex= hexToGameObjectMap[hexes[x, y]];
-        SelectedUnit.transform.parent = hex.transform;
-        SelectedUnit.transform.position = hexes[x, y].Position();
-        ClickableUnit cu = hex.GetComponentInChildren<ClickableUnit>();
-
-        ChangeUnitHex(cu.x, cu.y);
-        ChangeUnitHex(x, y, SelectedUnit);
-    }
-
-    public void ChangeUnitHex(int x, int y, GameObject unit=null)
-    {
-        GameObject hex = hexToGameObjectMap[hexes[x, y]];
-        ClickableHex ch = hex.GetComponentInChildren<ClickableHex>();
-        ch.gameObjectUnit = unit;
-        if (unit == null)
-        {
-            units[x, y] = -1;
-            nodes[x, y].costOfMovement = nodes[x,y].normalCostOfMovement;
-            ch.owner = 0;
-        }
-        else
-        {
-            ClickableUnit cu = hex.GetComponentInChildren<ClickableUnit>();
-            
-            units[x, y] = cu.type;
-            
-            cu.x = x;
-            cu.y = y;
-            nodes[x, y].costOfMovement = -1;
-            ch.owner = cu.owner;
-        }
-    }
 
     public void MoveUnit(int endx, int endy)
     {
         if (path != null)
         {
-            Node last = nodes[endx, endy];
+            Node last = controlMap.nodes[endx, endy];
             if (path.Contains(last))
             {
-                Hex actual = hexes[endx, endy];
-                int maxMovement = SelectedUnit.GetComponentInChildren<ClickableUnit>().turnMovement;
+                Hex actual = controlMap.hexes[endx, endy];
+                int maxMovement = SelectedUnit.turnMovement;
                 int counter = 0;
                 foreach (Node i in path)
                 {
-                    actual = hexes[i.x, i.y];
+                    actual = controlMap.hexes[i.x, i.y];
                     if (i.costOfMovement != -1)
                     {
                         counter += i.costOfMovement;
                     }
-                    if (actual.X() == last.x && actual.Y() == last.y) break;
+                    if (actual.x == last.x && actual.y == last.y) break;
                     if (counter > maxMovement) break;
                 }
                 togglePath(false);
-                ChangeMPSelectedUnit(-counter);
-                MoveSelectedUnit(actual.X(), actual.Y());
+                SelectedUnit.turnMovement -= counter;
+                controlMap.MoveUnit(SelectedUnit, actual.x,actual.y);
                 path = null;
                 return;
             }
@@ -323,25 +300,24 @@ public class HexMap : MonoBehaviour {
         {
             path = PathFindHex(endx, endy);
         }
-        if (SUcu != null && SUcu.owner == 0)
+        if (SelectedUnit != null && SelectedUnit.owner == 0)
         {
             togglePath(true);
         }
     }
 
-    internal void MoveUnitCloser(int x, int y, GameObject unit)
+    internal void MoveUnitCloser(int x, int y, Unit unit)
     {
         List<Node> posibilities =null;
         List<Node> final= null;
         int cost;
         int min = 1000;
-        if (SelectedUnit != null) SelectedUnit.GetComponent<ClickableUnit>().changeHalo(false);
+        if (SelectedUnit != null) SelectedUnit.cu.changeHalo(false);
         SelectedUnit = unit;
-        SUcu = SelectedUnit.GetComponent<ClickableUnit>();
         int tries = 1;
         while(tries < 3)
         {
-            if (tries == 1) posibilities = nodes[x, y].NeightboursLand;
+            if (tries == 1) posibilities = controlMap.nodes[x, y].NeightboursLand;
             else posibilities = getNodesRadius(x, y, tries);
             foreach (Node n in posibilities)
             {
@@ -377,10 +353,12 @@ public class HexMap : MonoBehaviour {
         }
         return counter;
     }
-
-    private void ChangeMPSelectedUnit(int counter)
+    
+    public void changePath(List<Node> newPath)
     {
-        SUcu.turnMovement += counter;
+        togglePath(false);
+        path = newPath;
+        togglePath(true);
     }
 
     public void togglePath(Boolean option)
@@ -389,12 +367,12 @@ public class HexMap : MonoBehaviour {
         int maxMovement = 100;
         if (option)
         {
-            maxMovement = SUcu.turnMovement;
+            maxMovement = SelectedUnit.turnMovement;
         }
         int counter = 0;
         foreach (Node i in path)
         {
-            ClickableHex ct = hexToGameObjectMap[hexes[i.x, i.y]].GetComponentInChildren<ClickableHex>();
+            ClickableHex ct = controlMap.hexes[i.x,i.y].ch;
             if (i.costOfMovement > 0) ct.showPath(option);
             if (i.costOfMovement != -1)
             {
@@ -410,15 +388,15 @@ public class HexMap : MonoBehaviour {
         Dictionary<Node, float> dist = new Dictionary<Node, float>();
         Dictionary<Node, Node> previous = new Dictionary<Node, Node>();
 
-        Node start = nodes[SelectedUnit.GetComponentInChildren<ClickableUnit>().x, SelectedUnit.GetComponentInChildren<ClickableUnit>().y];
-        Node finish = nodes[endx,endy];
+        Node start = controlMap.nodes[SelectedUnit.x, SelectedUnit.y];
+        Node finish = controlMap.nodes[endx,endy];
 
         if (finish.costOfMovement == -1)
         {
             return null;
         }
 
-        foreach ( Node n in nodes)
+        foreach ( Node n in controlMap.nodes)
         {
             if (n.costOfMovement != -1)
             {
@@ -479,58 +457,309 @@ public class HexMap : MonoBehaviour {
 
     }
 
-    public void SpawnUnit(int x, int y, int type)
+    public bool SpawnUnit(int x, int y, int type)
     {
-        List<Node> neightbours = nodes[x, y].NeightboursLand;
+        List<Node> neightbours = controlMap.nodes[x, y].NeightboursLand;
         foreach (Node i in neightbours)
         {
-            if (units[i.x, i.y] == -1)
+            if (controlMap.Units[i.x,i.y] == null)
             {
                 units[i.x, i.y] = type;
-                ClickableHex ct = hexToGameObjectMap[hexes[i.x, i.y]].GetComponentInChildren<ClickableHex>();
-                ct.createUnit();
-                ct.changeUnit(units[i.x, i.y]);
-                ClickableUnit cu = hexToGameObjectMap[hexes[i.x, i.y]].GetComponentInChildren<ClickableUnit>();
-                nodes[i.x, i.y].costOfMovement = -1;
-                cu.type = type;
+                int owner;
                 if (units[i.x, i.y] < 2)
                 {
-                    ct.owner = 0;
-                    cu.owner = 0;
+                    owner = 0;
                 }
                 else
                 {
-                    ct.owner = 1;
-                    cu.owner = 1;
+                    owner = 1;
                 }
 
-                break;
+                controlMap.CreateUnit(type, i.x, i.y, owner);
+
+                return true;
             }
+        }
+        return false;
+    }
+
+}
+
+public class Unit {
+
+    public int x = 0;
+    public int y = 0;
+    public int owner = 0;
+    public Hex hex;
+    public ClickableUnit cu;
+    public GameObject GO;
+    public int hp = 2;
+    public int damage = 1;
+    public int maxMovement = 1;
+    public int turnMovement = 1;
+    public int maxAttacks = 1;
+    public int turnAttacks = 1;
+
+    public void SetClickableHex(Hex newHex)
+    {
+        hex = newHex;
+        hex.ch.owner = owner;
+        hex.ch.currentUnit = this;
+        x = hex.x;
+        y = hex.y;
+        cu.map.controlMap.nodes[x, y].costOfMovement = -1;
+        ChangeTurnMovement(0);
+
+    }
+
+    public void ResetTurn()
+    {
+        turnMovement = maxMovement;
+        turnAttacks = maxAttacks;
+        ChangeTurnMovement(0);
+    }
+
+    public void ChangeHP(int change)
+    {
+        hp += change;
+        cu.HP.text = hp.ToString();
+    }
+
+    public void ChangeTurnMovement(int change)
+    {
+        turnMovement += change;
+        if (turnMovement < -1) turnMovement = -1;
+        if (owner > 0)
+        {
+            cu.Movement.text = (maxMovement + 1).ToString();
+        }
+        else
+        {
+            cu.Movement.text = (turnMovement + 1).ToString();
         }
     }
 
-    private void GenerateNeightboards()
+    public void SetDamage(int change)
     {
-        nodes = new Node[mapSizeX, mapSizeY];
-        for (int x = 0; x < mapSizeX; x++)
+        damage = change;
+        cu.Damage.text = damage.ToString();
+    }
+
+    public void Dead()
+    {
+
+        GameObject.Destroy(GO);
+
+
+    }
+}
+
+public class Building
+{
+    public int x = 0;
+    public int y = 0;
+    public int owner = 0;
+    public Hex hex;
+    public ClickableBuilding cb;
+    public GameObject GO;
+    public int hp = 3;
+    public int spawnRate = 2;
+
+
+    public void SetClickableHex(Hex newHex)
+    {
+        hex = newHex;
+        hex.ch.owner = owner;
+        hex.ch.currentBuilding = this;
+        x = hex.x;
+        y = hex.y;
+        cb.map.controlMap.nodes[x, y].costOfMovement = -1;
+        ChangeHP(0);
+
+    }
+
+    public void ResetTurn()
+    {
+    }
+    
+    public void ChangeHP(int change)
+    {
+        hp += change;
+        if (hp < -1) hp = -1;
+        if (owner > 0)
         {
-            for (int y = 0; y < mapSizeY; y++)
+            cb.HP.text = "∞";
+        }
+        else
+        {
+            cb.HP.text = hp.ToString();
+        }
+    }
+
+    public void Dead()
+    {
+
+        GameObject.Destroy(GO);
+
+
+    }
+
+    internal void RandomSpawn(int turn)
+    {
+        int chance = Random.Range(0, 100);
+        if (chance < spawnRate)
+        {
+            hex.ch.map.SpawnUnit(x, y, 2);
+            spawnRate = 1;
+        }
+        else
+        {
+            if (turn > 20) spawnRate += 2;
+            else spawnRate += 1;
+        }
+    }
+}
+
+public class Map
+{
+    public int sizeX;
+    public int sizeY;
+
+    public HexMap map;
+    public Hex[,] hexes;
+    public Node[,] nodes;
+    public Unit[,] Units;
+    public Building[,] Buildings;
+
+
+    public void CreateUnit(int type, int x, int y, int owner)
+    {
+        Unit u = new Unit();
+        u.owner = owner;
+        hexes[x, y].ch.createUnit(u);
+        u.cu.unit = u;
+        hexes[x, y].ch.changeUnit(type);
+        nodes[x, y].costOfMovement = -1;
+        Units[x, y] = u;
+        u.SetDamage(1);
+        u.ChangeTurnMovement(0);
+        u.ChangeHP(0);
+
+    }
+
+    public void CreateBuilding(int type, int x, int y, int owner)
+    {
+        Building b = new Building();
+        if (type == 1)
+        {
+            owner = 1;
+        }
+        else owner = 0;
+        b.owner = owner;
+        hexes[x, y].ch.createBuilding(b);
+        b.cb.building = b;
+        nodes[x, y].costOfMovement = -1;
+        Buildings[x, y] = b;
+        b.ChangeHP(0);
+
+    }
+
+    public void AttackBuilding(Unit attacker, Building defender)
+    {
+        attacker.turnAttacks--;
+        if (attacker.damage >= defender.hp)
+        {
+            Units[defender.x, defender.y] = null;
+            defender.Dead();
+            nodes[defender.x, defender.y].costOfMovement = nodes[defender.x, defender.y].normalCostOfMovement;
+            defender.hex.ch.RemoveBuilding();
+
+        }
+        else
+        {
+            defender.ChangeHP(-attacker.damage);
+        }
+
+
+    }
+
+    public void MoveUnit(Unit unit, int x, int y)
+    {
+        Hex oldHex = hexes[unit.x, unit.y];
+        Units[unit.x, unit.y] = null;
+        Hex newHex = hexes[x, y];
+        Units[x, y] = unit;
+        unit.GO.transform.parent = newHex.GO.transform;
+        unit.GO.transform.position = newHex.Position();
+        unit.SetClickableHex(newHex);
+        oldHex.RemoveUnit();
+    }
+
+    public void AttackUnit (Unit attacker, Unit defender)
+    {
+        attacker.turnAttacks--;
+        if (attacker.damage >= defender.hp)
+        {
+            Units[defender.x, defender.y] = null;
+            defender.Dead();
+            nodes[defender.x, defender.y].costOfMovement = nodes[defender.x, defender.y].normalCostOfMovement;
+            defender.hex.ch.RemoveUnit();
+        }
+        else
+        {
+            defender.ChangeHP(-attacker.damage);
+        }
+
+
+    }
+
+    public Unit NextUnit(Unit center)
+    {
+        return new Unit();
+    }
+
+    public List<Unit> AllUnit(Unit center)
+    {
+        return new List<Unit>();
+    }
+
+    public bool CheckStartingCity(int x, int y)
+    {
+        return true;
+    }
+
+    public void SpawnUnit(int x, int y, int type)
+    {
+
+    }
+
+    public List<Hex> AllFreeSpaces(int x, int y, int radius)
+    {
+        return new List<Hex>();
+    }
+
+    public void GenerateNeightboards(int[,] tiles)
+    {
+        nodes = new Node[sizeX, sizeY];
+        for (int x = 0; x < sizeX; x++)
+        {
+            for (int y = 0; y < sizeY; y++)
             {
                 Node n = new Node();
                 nodes[x, y] = n;
 
             }
         }
-        for (int x = 0; x < mapSizeX; x++)
+        for (int x = 0; x < sizeX; x++)
         {
-            for (int y = 0; y < mapSizeY; y++)
+            for (int y = 0; y < sizeY; y++)
             {
                 List<Node> neigh = new List<Node>();
-                if (x < mapSizeX - 1)
+                if (x < sizeX - 1)
                 {
                     neigh.Add(nodes[x + 1, y]);
                 }
-                if (y < mapSizeY - 1)
+                if (y < sizeY - 1)
                 {
                     neigh.Add(nodes[x, y + 1]);
                 }
@@ -542,22 +771,25 @@ public class HexMap : MonoBehaviour {
                 {
                     neigh.Add(nodes[x, y - 1]);
                 }
-                if (x > 0 && y < mapSizeY - 1)
+                if (x > 0 && y < sizeY - 1)
                 {
                     neigh.Add(nodes[x - 1, y + 1]);
                 }
-                if (y > 0 && x < mapSizeX - 1)
+                if (y > 0 && x < sizeY - 1)
                 {
                     neigh.Add(nodes[x + 1, y - 1]);
                 }
 
                 nodes[x, y].Neightbours = neigh;
-                nodes[x, y].costOfMovement = hexMovementCost[tiles[x, y]];
-                nodes[x, y].normalCostOfMovement = hexMovementCost[tiles[x, y]];
+                nodes[x, y].costOfMovement = map.hexMovementCost[tiles[x, y]];
+                nodes[x, y].normalCostOfMovement = map.hexMovementCost[tiles[x, y]];
                 nodes[x, y].x = x;
                 nodes[x, y].y = y;
 
             }
         }
     }
+
+
+
 }

@@ -6,16 +6,18 @@ public class ClickableUnit : MonoBehaviour {
 
     public HexMap map;
     public GameObject parent;
+    public Unit unit;
     float t0;
     public Component halo;
     public int x;
     public int y;
     public List<Node> path;
-    public int maxMovement;
-    public int turnMovement;
-    public int owner;
-    public int attack = 1;
     public int type;
+    public TextMesh HP;
+    public TextMesh Damage;
+    public TextMesh Movement;
+
+
 
 
     private void Start()
@@ -52,11 +54,10 @@ public class ClickableUnit : MonoBehaviour {
         { 
             if (map.SelectedUnit != null)
             {
-                map.SelectedUnit.GetComponentInChildren<ClickableUnit>().changeHalo(false);
+                map.SelectedUnit.cu.changeHalo(false);
             }
             changeHalo(true);
-            map.SelectedUnit = parent;
-            map.SUcu = this;
+            map.SelectedUnit = unit;
             Debug.Log("Clicked a unit");
         }   
     }

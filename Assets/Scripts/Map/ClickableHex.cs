@@ -5,12 +5,11 @@ using UnityEngine;
 
 public class ClickableHex : MonoBehaviour {
 
-    public int tileX, tileY;
+    public int x, y;
     public GameObject parent;
     public HexMap map;
     public List<Node> path;
     public GameObject gameObjectHex;
-    public GameObject gameObjectUnit;
     public GameObject gameObjectBuilding;
     public Sprite[] spriteHex;
     public Sprite[] spriteUnit;
@@ -19,6 +18,9 @@ public class ClickableHex : MonoBehaviour {
     public Component halo;
     public GameObject buildingPrefab;
     public Sprite[] buildingSprites;
+    public Unit currentUnit;
+    public Building currentBuilding;
+    public Hex hex;
 
     public int owner;
 
@@ -41,58 +43,52 @@ public class ClickableHex : MonoBehaviour {
         {
             if (owner == 0)
             {
-                if (map.SelectedUnit != gameObjectUnit && gameObjectUnit != null)
+                if(currentBuilding != null)
+                {
+                    map.ShowBuildingMenu(currentBuilding); 
+                }
+                if (map.SelectedUnit != currentUnit && currentUnit != null)
                 {
                     if (map.SelectedUnit != null)
                     {
-                        map.SelectedUnit.GetComponent<ClickableUnit>().changeHalo(false);
+                        map.SelectedUnit.cu.changeHalo(false);
                     }
-                    map.SelectedUnit = gameObjectUnit;
-                    map.SUcu = gameObjectUnit.GetComponent<ClickableUnit>();
+                    map.SelectedUnit = currentUnit;
                     changeHalo(true);
                 }
 
-                map.MoveUnit(tileX, tileY);
-
             }
-            if (gameObjectUnit != null && map.SelectedUnit != null && gameObjectUnit.GetComponent<ClickableUnit>().owner != map.SUcu.owner)
+            else if (owner == -1)
             {
-                if (map.SelectedUnit.GetComponent<ClickableUnit>().attack > 0)
+                map.MoveUnit(x, y);
+            }
+            if (currentUnit != null && map.SelectedUnit != null && currentUnit.owner != map.SelectedUnit.owner)
+            {
+                if (map.SelectedUnit.turnAttacks > 0)
                 {
                     if (isNeightboard())
                     {
-                        GetAttack();
+                        map.controlMap.AttackUnit(map.SelectedUnit, currentUnit);
                     }
                 }
             }
-            if (gameObjectBuilding != null)
-            {
-                int unit;
-                if (owner == 0) unit = 2;
-                else unit = UnityEngine.Random.Range(0, 2);
-                map.SpawnUnit(tileX, tileY, unit);
-            }
+           //if (gameObjectBuilding != null)
+            //{
+             //   int unit;
+              //  if (owner == 1) unit = 2;
+               // else unit = UnityEngine.Random.Range(0, 2);
+                //map.SpawnUnit(x, y, unit);
+           // }
 
         }
     }
 
-    public void GetAttack()
-    {
-
-        map.units[tileX, tileY] = -1;
-        owner = 0;
-        Destroy(gameObjectUnit);
-        map.SUcu.attack = 0;
-        map.nodes[tileX, tileY].costOfMovement = map.nodes[tileX, tileY].normalCostOfMovement;
-    }
-
     private bool isNeightboard()
     {
-        List<Node> options = map.nodes[map.SUcu.x, map.SUcu.y].Neightbours;
-        ClickableUnit cu = gameObjectUnit.GetComponent<ClickableUnit>();
+        List<Node> options = map.controlMap.nodes[map.SelectedUnit.x, map.SelectedUnit.y].Neightbours;
         foreach (Node i in options)
         {
-            if (i.x == cu.x && i.y == cu.y) return true;
+            if (i.x == x && i.y == y) return true;
         }
         return false;
 
@@ -109,7 +105,7 @@ public class ClickableHex : MonoBehaviour {
 
     public void changeHalo(bool option)
     {
-        gameObjectUnit.GetComponent<ClickableUnit>().changeHalo(option);
+        currentUnit.cu.changeHalo(option);
     }
 
     public void showPath(bool option)
@@ -123,47 +119,75 @@ public class ClickableHex : MonoBehaviour {
         sr.sprite = spriteHex[0];
         sr.color = spriteColor[i];
     }
-    public void createUnit()
+    public void createUnit(Unit newUnit)
     {
-        gameObjectUnit = (GameObject)Instantiate(unitPrefab, transform.position, Quaternion.identity, parent.transform);
-        ClickableUnit cu = gameObjectUnit.GetComponent<ClickableUnit>();
+        GameObject gameObjectUnit = (GameObject)Instantiate(unitPrefab, transform.position, Quaternion.identity, parent.transform);
+        currentUnit = newUnit;
+        currentUnit.GO = gameObjectUnit;
+        ClickableUnit cu = gameObjectUnit.GetComponentInChildren<ClickableUnit>();
+        currentUnit.cu = cu;
         cu.map = map;
-        cu.x = tileX;
-        cu.y = tileY;
+        currentUnit.hex = hex;
+        currentUnit.SetClickableHex(hex);
+        cu.map = map;
+        cu.x = x;
+        cu.y = y;
         cu.halo = gameObjectUnit.GetComponent("Halo");
     }
     public void changeUnit(int i)
     {
-        SpriteRenderer sr = gameObjectUnit.GetComponent<SpriteRenderer>();
+        SpriteRenderer sr = currentUnit.GO.GetComponent<SpriteRenderer>();
         sr.sprite = spriteUnit[i];
-        ClickableUnit cu = gameObjectUnit.GetComponent<ClickableUnit>();
+        ClickableUnit cu = currentUnit.cu;
         cu.type = i;
         if (i < 2)
         {
             owner = 0;
-            cu.owner = 0;
+            currentUnit.owner = 0;
         }
         else
         {
             owner = 1;
-            cu.owner = 1;
+            currentUnit.owner = 1;
         }
 
-        cu.maxMovement = 1;
-        cu.turnMovement = 1;
+        currentUnit.maxMovement = 1;
+        currentUnit.turnMovement = 1;
     }
 
-    internal void createBuilding(int type, Hex h)
+    public void createBuilding(Building newBuilding)
     {
-        gameObjectBuilding = (GameObject)Instantiate(buildingPrefab, h.Position(), Quaternion.identity, parent.transform);
+
+        gameObjectBuilding = (GameObject)Instantiate(buildingPrefab, transform.position, Quaternion.identity, parent.transform);
         SpriteRenderer srBuilding = gameObjectBuilding.GetComponentInChildren<SpriteRenderer>();
-        srBuilding.sprite = buildingSprites[owner];
-        if (type == 1)
+        srBuilding.sprite = buildingSprites[newBuilding.owner];
+        owner = newBuilding.owner;
+        if (owner == 0)
         {
             Camera.main.transform.position = new Vector3(gameObjectBuilding.transform.position.x, gameObjectBuilding.transform.position.y, Camera.main.transform.position.z);
         }
         srBuilding.sortingOrder = 1;
 
+        currentBuilding = newBuilding;
+        currentBuilding.GO = gameObjectBuilding;
+        ClickableBuilding cb = gameObjectBuilding.GetComponentInChildren<ClickableBuilding>();
+        currentBuilding.cb = cb;
+        cb.map = map;
+        currentBuilding.hex = hex;
+        currentBuilding.SetClickableHex(hex);
+        cb.x = x;
+        cb.y = y;
+    }
+
+    internal void RemoveUnit()
+    {
+        currentUnit = null;
+        owner = -1;
+    }
+
+    internal void RemoveBuilding()
+    {
+        throw new NotImplementedException();
     }
 }
 
