@@ -11,6 +11,8 @@ public class CameraMovement : MonoBehaviour {
     public float maxX;
     public float minY;
     public float maxY;
+    public int maxCamara = 40;
+    public int minCamara = 20;
 
     public float dragSpeed = 2;
     private Vector3 dragOrigin;
@@ -19,7 +21,7 @@ public class CameraMovement : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        speed = 10f;
+        speed = 30f;
         minX = 10f;
         maxX = 55f;
         minY = 5f;
@@ -34,41 +36,41 @@ public class CameraMovement : MonoBehaviour {
         CamaraSpeed();
         CamaraZoom();
         CamaraMouseMovement();
-        if (Input.GetKey(KeyCode.R) || Input.GetKey(KeyCode.D))
-        {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        }
+        // (Input.GetKey(KeyCode.R))
+        //{
+         //   SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        //}
     }
 
     void CamaraKeyboardMovement()
     {
         if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
         {
-            if (transform.position.x < maxX)
-            {
+            //if (transform.position.x < maxX)
+            //{
                 transform.Translate(new Vector3(speed * Time.deltaTime, 0, 0));
-            }
+            //}
         }
         if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
         {
-            if (transform.position.x > minX)
-            {
+            //if (transform.position.x > minX)
+            //{
                 transform.Translate(new Vector3(-speed * Time.deltaTime, 0, 0));
-            }
+            //}
         }
         if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
         {
-            if (transform.position.y > minY)
-            {
+            //if (transform.position.y > minY)
+            //{
                 transform.Translate(new Vector3(0, -speed * Time.deltaTime, 0));
-            }
+            //}
         }
         if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
         {
-            if (transform.position.y < maxY)
-            {
+            //if (transform.position.y < maxY)
+            //{
                 transform.Translate(new Vector3(0, speed * Time.deltaTime, 0));
-            }
+            //}
         }
     }
     void CamaraMouseMovement()
@@ -113,11 +115,21 @@ public class CameraMovement : MonoBehaviour {
         var d = Input.GetAxis("Mouse ScrollWheel");
         if (d > 0f)
         {
-            cam.orthographicSize = cam.orthographicSize - 1f;
+            if (cam.orthographicSize - 1f < minCamara)
+            {
+                cam.orthographicSize = minCamara;
+            }
+            else
+                cam.orthographicSize = cam.orthographicSize - 1f;
         }
         else if (d < 0f)
         {
-            cam.orthographicSize = cam.orthographicSize + 1f;
+            if (cam.orthographicSize + 1f > maxCamara)
+            {
+                cam.orthographicSize = maxCamara;
+            }
+            else
+                cam.orthographicSize = cam.orthographicSize + 1f;
         }
     }
 }

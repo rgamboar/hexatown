@@ -102,7 +102,7 @@ public class HexMap_Continent : HexMap
 
         ElevationToTiles();
         PutStartingPoint(2,10,6);
-        PutCity(2, 6, 10, 6);
+        PutCity(2, 7, 10, 10);
         ElevationToTiles();
         //putTestUnit();
     }
@@ -154,6 +154,7 @@ public class HexMap_Continent : HexMap
                 {
                     buildings[x, y] = 1;
                     cities++;
+                    RaiseStartingCity(x, y, true);
                     //  return;
                 }
             }
@@ -171,6 +172,7 @@ public class HexMap_Continent : HexMap
 
         }
     }
+
     void PutStartingPoint(int startTileType, int radius, int totalGoodTiles, int quantity = 1)
     {
         int x = radius;
@@ -217,42 +219,51 @@ public class HexMap_Continent : HexMap
         }
     }
 
-    private void RaiseStartingCity(int x, int y)
+    private void RaiseStartingCity(int x, int y, bool option = false)
     {
         if (x < mapSizeX - 1)
         {
             Hex h = getHex(x + 1, y);
-            RaiseTile(h);
+            RaiseTile(h, option);
         }
         if (y < mapSizeY - 1)
         {
             Hex h = getHex(x, y + 1);
-            RaiseTile(h);
+            RaiseTile(h, option);
         }
         if (x > 0)
         {
             Hex h = getHex(x - 1, y);
-            RaiseTile(h);
+            RaiseTile(h, option);
         }
         if (y > 0)
         {
             Hex h = getHex(x, y - 1);
-            RaiseTile(h);
+            RaiseTile(h, option);
         }
         if (x > 0 && y < mapSizeY - 1)
         {
             Hex h = getHex(x - 1, y + 1);
-            RaiseTile(h);
+            RaiseTile(h, option);
         }
         if (y > 0 && x < mapSizeY - 1)
         {
             Hex h = getHex(x + 1, y - 1);
-            RaiseTile(h);
+            RaiseTile(h, option);
         }
     }
 
-    private void RaiseTile(Hex h)
+    private void RaiseTile(Hex h, bool option= false)
     {
+        if (option)
+        {
+            if (h.Elevation < 0f)
+            {
+                h.Elevation += 0.15f;
+            }
+            return;
+        }
+
         while (true)
         {
             if (h.Elevation < 0f)

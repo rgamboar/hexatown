@@ -25,7 +25,9 @@ public class HexMap : MonoBehaviour {
     public Node start;
     public Map controlMap;
     public int turn = 1;
+    public Button nextTurnButton;
 
+    internal bool currentTurn = true;
 
     public Text turnCounter;
 
@@ -52,8 +54,13 @@ public class HexMap : MonoBehaviour {
 
     internal void ShowBuildingMenu(Building building)
     {
-        buildingInterface.OpenLeftInterface(building.x,building.y);
+        buildingInterface.OpenLeftInterface(building.x, building.y);
     }
+    internal void HideBuildingMenu()
+    {
+        buildingInterface.CloseLeftInterface();
+    }
+
 
     void Start()
     {
@@ -65,6 +72,7 @@ public class HexMap : MonoBehaviour {
         GenerateMapData();
         controlMap.GenerateNeightboards(tiles);
         GenerateMapVisual();
+        PlayerPrefs.SetInt("Turn", turn);
     }
 
     public void GenerateMap()
@@ -145,10 +153,11 @@ public class HexMap : MonoBehaviour {
     }
     
 
+
     public void ResetTurn()
     {
-        turn++;
-        turnCounter.text = "Turn: " + turn;
+        nextTurnButton.interactable = false;
+        currentTurn = false;
         buildingInterface.Produce(turn);
         changePath(null);
         if (SelectedUnit != null) SelectedUnit.cu.changeHalo(false);
@@ -175,7 +184,16 @@ public class HexMap : MonoBehaviour {
                 }
             }
         }
-        checkGameOver(h);
+
+        StartCoroutine(EnemyTurn(h));
+
+    }
+
+
+
+    System.Collections.IEnumerator EnemyTurn(Hex h)
+    {
+
         for (int x = 0; x < mapSizeX; x++)
         {
             for (int y = 0; y < mapSizeY; y++)
@@ -183,22 +201,45 @@ public class HexMap : MonoBehaviour {
                 if (controlMap.Units[x, y] != null)
                 {
                     Unit u = controlMap.Units[x, y];
-                    if (u.owner == 1 && u.turnMovement> 0)
+                    if (u.owner == 1 && u.turnMovement > 0)
                     {
                         MoveUnitCloser(h.x, h.y, u);
+                        yield return new WaitForSeconds(0.3f);
                         if (u.turnAttacks > 0)
                         {
+                            AttackBase();
                             AttackClose();
                         }
                     }
                 }
-                
+
             }
         }
 
 
+
+        turn++;
+        PlayerPrefs.SetInt("Turn", turn);
+        turnCounter.text = "Turn: " + turn;
+        nextTurnButton.interactable = true;
+        currentTurn = true;
+
         togglePath(false);
         SelectedUnit = null;
+
+    }
+
+    private void AttackBase()
+    {
+        List<Node> options = controlMap.nodes[SelectedUnit.x, SelectedUnit.y].Neightbours;
+        foreach (Node i in options)
+        {
+            if (controlMap.Buildings[i.x, i.y] != null && controlMap.Buildings[i.x, i.y].owner == 0)
+            {
+                controlMap.AttackBuilding(SelectedUnit, controlMap.Buildings[i.x, i.y]);
+                return;
+            }
+        }
     }
 
     private void checkGameOver(Hex h)
@@ -493,7 +534,7 @@ public class Unit {
     public Hex hex;
     public ClickableUnit cu;
     public GameObject GO;
-    public int hp = 2;
+    public int hp = 0;
     public int damage = 1;
     public int maxMovement = 1;
     public int turnMovement = 1;
@@ -563,7 +604,7 @@ public class Building
     public ClickableBuilding cb;
     public GameObject GO;
     public int hp = 3;
-    public int spawnRate = 2;
+    public int spawnRate = 10;
 
 
     public void SetClickableHex(Hex newHex)
@@ -598,10 +639,10 @@ public class Building
 
     public void Dead()
     {
-
-        GameObject.Destroy(GO);
-
-
+        if (owner == 0)
+        {
+            SceneManager.LoadScene(2);
+        }
     }
 
     internal void RandomSpawn(int turn)
@@ -610,12 +651,12 @@ public class Building
         if (chance < spawnRate)
         {
             hex.ch.map.SpawnUnit(x, y, 2);
-            spawnRate = 1;
+            spawnRate = 4;
         }
         else
         {
-            if (turn > 20) spawnRate += 2;
-            else spawnRate += 1;
+            if (turn > 20) spawnRate += 4   ;
+            else spawnRate += 2;
         }
     }
 }
@@ -641,10 +682,27 @@ public class Map
         hexes[x, y].ch.changeUnit(type);
         nodes[x, y].costOfMovement = -1;
         Units[x, y] = u;
-        u.SetDamage(1);
-        u.ChangeTurnMovement(0);
-        u.ChangeHP(0);
 
+        if(type == 0)
+        {
+            u.SetDamage(1);
+            u.maxMovement++;
+            u.ChangeTurnMovement(1);
+            u.ChangeHP(1);
+        }
+        else if (type == 1)
+        {
+            u.SetDamage(1);
+            u.maxMovement--;
+            u.ChangeTurnMovement(-1);
+            u.ChangeHP(3);
+        }
+        else if (type == 2)
+        {
+            u.SetDamage(Random.Range(1,3));
+            u.ChangeTurnMovement(0);
+            u.ChangeHP(2);
+        }
     }
 
     public void CreateBuilding(int type, int x, int y, int owner)
@@ -672,8 +730,6 @@ public class Map
             Units[defender.x, defender.y] = null;
             defender.Dead();
             nodes[defender.x, defender.y].costOfMovement = nodes[defender.x, defender.y].normalCostOfMovement;
-            defender.hex.ch.RemoveBuilding();
-
         }
         else
         {
@@ -693,23 +749,26 @@ public class Map
         unit.GO.transform.position = newHex.Position();
         unit.SetClickableHex(newHex);
         oldHex.RemoveUnit();
+        //if (unit.owner == 0) HexMap.print("Happening in:" + unit.x + "-" + unit.y);
     }
 
     public void AttackUnit (Unit attacker, Unit defender)
     {
         attacker.turnAttacks--;
-        if (attacker.damage >= defender.hp)
+        defender.ChangeHP(-attacker.damage);
+
+        if (0 >= defender.hp)
         {
+            //HexMap.print("Unit dead at: " + defender.x + "-" + defender.y);
             Units[defender.x, defender.y] = null;
             defender.Dead();
             nodes[defender.x, defender.y].costOfMovement = nodes[defender.x, defender.y].normalCostOfMovement;
             defender.hex.ch.RemoveUnit();
+            if (attacker.owner == 0)
+            {
+                attacker.cu.map.buildingInterface.Change(1, 0);
+            }
         }
-        else
-        {
-            defender.ChangeHP(-attacker.damage);
-        }
-
 
     }
 

@@ -4,15 +4,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+
 public class BuildingInterface : MonoBehaviour {
+
+
 
     public GameObject leftInterface;
     public bool leftVisibility;
     public HexMap map;
     public int x, y;
 
-    public int tools = 5;
-    public int residents = 3;
+    public float tools = 1;
+    public float residents = 1;
     public int maxunitTurn = 2;
     public int unitTurn = 2;
 
@@ -70,7 +73,12 @@ public class BuildingInterface : MonoBehaviour {
 
     public void Produce(int turn)
     {
-        Change(((turn / 2) + residents ),(1 + (turn / 4)));
+
+        if (residents > 10 && residents> turn/3)
+        {
+            Change(1 + (turn / 15), 2);
+        }
+        Change(1 + (turn/20), 1);   
     }
 
     public bool Spend(int t, int r)
@@ -83,12 +91,16 @@ public class BuildingInterface : MonoBehaviour {
         return false;
     }
 
-    private void Change(int t, int r)
+    public void Change(float t, float r)
     {
         tools += t;
         residents += r;
 
-        toolsText.text = "Tools: " + tools;
-        residentsText.text = "Residents: " + residents;
+        int t2 = (int)tools;
+        int r2 = (int)residents;
+
+        toolsText.text = "Tools: " + t2;
+        residentsText.text = "Residents: " + r2;
     }
+
 }

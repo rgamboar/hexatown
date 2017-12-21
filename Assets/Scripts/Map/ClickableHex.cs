@@ -39,8 +39,9 @@ public class ClickableHex : MonoBehaviour {
     }
     void OnMouseUp()
     {
-        if ((Time.time - t0) < 0.2f)
+        if ((Time.time - t0) < 0.2f && map.currentTurn)
         {
+
             if (owner == 0)
             {
                 if(currentBuilding != null)
@@ -185,9 +186,5 @@ public class ClickableHex : MonoBehaviour {
         owner = -1;
     }
 
-    internal void RemoveBuilding()
-    {
-        throw new NotImplementedException();
-    }
 }
 
