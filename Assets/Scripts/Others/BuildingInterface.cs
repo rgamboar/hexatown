@@ -14,8 +14,8 @@ public class BuildingInterface : MonoBehaviour {
     public HexMap map;
     public int x, y;
 
-    public float tools = 1;
-    public float residents = 1;
+    public float tools = 2;
+    public float residents = 2;
     public int maxunitTurn = 2;
     public int unitTurn = 2;
 
@@ -51,13 +51,13 @@ public class BuildingInterface : MonoBehaviour {
         int t, r;
         if (option == 0)
         {
-            t = 1;
-            r = 1;
+            t = 2;
+            r = 2;
         }
         else
         {
-            t = 2;
-            r = 2;
+            t = 4;
+            r = 3;
         }
         CreateUnit(option, t, r);
     }
