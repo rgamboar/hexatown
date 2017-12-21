@@ -203,6 +203,12 @@ public class HexMap : MonoBehaviour {
                     Unit u = controlMap.Units[x, y];
                     if (u.owner == 1 && u.turnMovement > 0)
                     {
+                        SelectedUnit = u;
+                        if (u.turnAttacks > 0)
+                        {
+                            AttackBase();
+                            AttackClose();
+                        }
                         MoveUnitCloser(h.x, h.y, u);
                         yield return new WaitForSeconds(0.3f);
                         if (u.turnAttacks > 0)
